@@ -11,7 +11,7 @@ export interface IStorage {
 
 export class DatabaseStorage implements IStorage {
   async getSeats(): Promise<Seat[]> {
-    return await db.select().from(seats).orderBy(seats.row, seats.number);
+    return await db.select().from(seats).orderBy(seats.section, seats.row, seats.number);
   }
 
   async bookSeats(seatIds: number[], bookedBy: string): Promise<number[]> {
@@ -45,18 +45,37 @@ export class DatabaseStorage implements IStorage {
   async seedSeats(): Promise<void> {
     const existing = await db.select().from(seats).limit(1);
     if (existing.length === 0) {
-      const rows = ['A', 'B', 'C', 'D', 'E', 'F'];
-      const seatsPerRow = 8;
       const allSeats: InsertSeat[] = [];
 
-      for (const row of rows) {
-        for (let i = 1; i <= seatsPerRow; i++) {
-          allSeats.push({
-            row,
-            number: i,
-            isBooked: false,
-            bookedBy: null
-          });
+      // Lower Section: 38 seats (4 rows of 8 + 1 row of 6)
+      const lowerRows = ['A', 'B', 'C', 'D'];
+      for (const row of lowerRows) {
+        for (let i = 1; i <= 8; i++) {
+          allSeats.push({ section: 'lower', row, number: i, isBooked: false, bookedBy: null });
+        }
+      }
+      // Last row of lower with 6 seats
+      for (let i = 1; i <= 6; i++) {
+        allSeats.push({ section: 'lower', row: 'E', number: i, isBooked: false, bookedBy: null });
+      }
+
+      // Middle Section: 92 seats (10 rows of 9 + 1 row of 2)
+      const middleRows = ['F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O'];
+      for (const row of middleRows) {
+        for (let i = 1; i <= 9; i++) {
+          allSeats.push({ section: 'middle', row, number: i, isBooked: false, bookedBy: null });
+        }
+      }
+      // Last row of middle with 2 seats
+      for (let i = 1; i <= 2; i++) {
+        allSeats.push({ section: 'middle', row: 'P', number: i, isBooked: false, bookedBy: null });
+      }
+
+      // Balcony Section: 150 seats (15 rows of 10)
+      const balconyRows = ['Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'AA', 'AB', 'AC', 'AD', 'AE'];
+      for (const row of balconyRows) {
+        for (let i = 1; i <= 10; i++) {
+          allSeats.push({ section: 'balcony', row, number: i, isBooked: false, bookedBy: null });
         }
       }
       
