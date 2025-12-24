@@ -1,38 +1,68 @@
-import { type User, type InsertUser } from "@shared/schema";
-import { randomUUID } from "crypto";
-
-// modify the interface with any CRUD methods
-// you might need
+import { db } from "./db";
+import { seats, type Seat, type InsertSeat } from "@shared/schema";
+import { eq, inArray } from "drizzle-orm";
 
 export interface IStorage {
-  getUser(id: string): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+  getSeats(): Promise<Seat[]>;
+  bookSeats(seatIds: number[], bookedBy: string): Promise<number[]>; // Returns booked seat IDs
+  resetSeats(): Promise<void>;
+  seedSeats(): Promise<void>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<string, User>;
-
-  constructor() {
-    this.users = new Map();
+export class DatabaseStorage implements IStorage {
+  async getSeats(): Promise<Seat[]> {
+    return await db.select().from(seats).orderBy(seats.row, seats.number);
   }
 
-  async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
+  async bookSeats(seatIds: number[], bookedBy: string): Promise<number[]> {
+    // Transaction to ensure atomicity and avoid double booking
+    return await db.transaction(async (tx) => {
+      // 1. Check if any are already booked
+      const existing = await tx
+        .select()
+        .from(seats)
+        .where(inArray(seats.id, seatIds));
+      
+      const alreadyBooked = existing.filter(s => s.isBooked);
+      if (alreadyBooked.length > 0) {
+        throw new Error(`Seats ${alreadyBooked.map(s => `${s.row}${s.number}`).join(', ')} are already booked.`);
+      }
+
+      // 2. Book them
+      await tx
+        .update(seats)
+        .set({ isBooked: true, bookedBy })
+        .where(inArray(seats.id, seatIds));
+      
+      return seatIds;
+    });
   }
 
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+  async resetSeats(): Promise<void> {
+    await db.update(seats).set({ isBooked: false, bookedBy: null });
   }
 
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
-    return user;
+  async seedSeats(): Promise<void> {
+    const existing = await db.select().from(seats).limit(1);
+    if (existing.length === 0) {
+      const rows = ['A', 'B', 'C', 'D', 'E', 'F'];
+      const seatsPerRow = 8;
+      const allSeats: InsertSeat[] = [];
+
+      for (const row of rows) {
+        for (let i = 1; i <= seatsPerRow; i++) {
+          allSeats.push({
+            row,
+            number: i,
+            isBooked: false,
+            bookedBy: null
+          });
+        }
+      }
+      
+      await db.insert(seats).values(allSeats);
+    }
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();

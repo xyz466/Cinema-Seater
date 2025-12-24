@@ -1,18 +1,25 @@
-import { sql } from "drizzle-orm";
-import { pgTable, text, varchar } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-export const users = pgTable("users", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  username: text("username").notNull().unique(),
-  password: text("password").notNull(),
+export const seats = pgTable("seats", {
+  id: serial("id").primaryKey(),
+  row: text("row").notNull(),
+  number: integer("number").notNull(),
+  isBooked: boolean("is_booked").default(false),
+  bookedBy: text("booked_by"), // Nullable, name of person who booked
 });
 
-export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  password: true,
-});
+export const insertSeatSchema = createInsertSchema(seats).omit({ id: true });
 
-export type InsertUser = z.infer<typeof insertUserSchema>;
-export type User = typeof users.$inferSelect;
+// API Types
+export type Seat = typeof seats.$inferSelect;
+export type InsertSeat = z.infer<typeof insertSeatSchema>;
+
+export type BookSeatsRequest = {
+  seatIds: number[];
+  bookedBy: string;
+};
+
+// Response for seat grid
+export type SeatResponse = Seat;
