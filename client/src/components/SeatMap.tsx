@@ -48,23 +48,23 @@ export function SeatMap({ seats, selectedSeatIds, onToggleSeat }: SeatMapProps) 
                       disabled={isBooked}
                       className={cn(
                         "relative group w-8 h-8 md:w-10 md:h-10 rounded-t-lg transition-all duration-300 flex items-center justify-center",
-                        "focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background",
-                        // Base State
-                        !isBooked && !isSelected && "text-muted-foreground/30 hover:text-primary hover:shadow-[0_0_15px_rgba(124,58,237,0.3)]",
-                        // Selected State
-                        isSelected && "text-primary shadow-[0_0_20px_rgba(124,58,237,0.5)] z-10",
-                        // Booked State
-                        isBooked && "text-white/5 cursor-not-allowed"
+                        "focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-background",
+                        // Base State - Gray for available
+                        !isBooked && !isSelected && "text-gray-400 hover:text-white hover:shadow-[0_0_15px_rgba(255,255,255,0.3)]",
+                        // Selected State - White
+                        isSelected && "text-white shadow-[0_0_20px_rgba(255,255,255,0.5)] z-10",
+                        // Booked State - Green
+                        isBooked && "text-green-500 cursor-not-allowed"
                       )}
                       aria-label={`Row ${row} Seat ${seat.number} ${isBooked ? 'Booked' : isSelected ? 'Selected' : 'Available'}`}
                     >
                       <Armchair 
                         className={cn(
                           "w-full h-full fill-current stroke-[1.5px]",
-                          // Fill selected seats completely
-                          isSelected && "fill-primary text-primary",
-                          // Booked seats are just outlines or very dim
-                          isBooked && "fill-white/5 text-transparent stroke-white/10"
+                          // Fill selected seats white
+                          isSelected && "fill-white text-white",
+                          // Booked seats green
+                          isBooked && "fill-green-500 text-green-500 stroke-green-500"
                         )} 
                       />
                       
