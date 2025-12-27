@@ -46,33 +46,27 @@ export class DatabaseStorage implements IStorage {
     const existing = await db.select().from(seats).limit(1);
     if (existing.length === 0) {
       const allSeats: InsertSeat[] = [];
-      const tierMap = {
-        "Royal": [0, 1],
-        "Prime Plus": [2, 4],
-        "Prime": [5, 7],
-        "Classic": [8, 11]
-      };
-      const rows = 12;
-      const cols = 10;
+      const sections = [
+        { name: "Royal", rows: 3, cols: 8 },
+        { name: "Prime Plus", rows: 6, cols: 10 },
+        { name: "Prime", rows: 8, cols: 12 },
+        { name: "Classic", rows: 10, cols: 15 }
+      ];
 
-      for (let r = 0; r < rows; r++) {
-        const rowLabel = String.fromCharCode(65 + r);
-        let section = "Classic";
-        for (const [tier, range] of Object.entries(tierMap)) {
-          if (r >= range[0] && r <= range[1]) {
-            section = tier;
-            break;
+      // Sections are ordered Back to Front in the UI, 
+      // but let's seed them in a logical order.
+      for (const section of sections) {
+        for (let r = 0; r < section.rows; r++) {
+          const rowLabel = `${section.name.charAt(0)}${r + 1}`;
+          for (let c = 1; c <= section.cols; c++) {
+            allSeats.push({
+              section: section.name,
+              row: rowLabel,
+              number: c,
+              isBooked: false,
+              bookedBy: null
+            });
           }
-        }
-
-        for (let c = 1; c <= cols; c++) {
-          allSeats.push({
-            section,
-            row: rowLabel,
-            number: c,
-            isBooked: false,
-            bookedBy: null
-          });
         }
       }
       

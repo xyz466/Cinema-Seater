@@ -11,12 +11,13 @@ interface SeatMapProps {
 
 export function SeatMap({ seats, selectedSeatIds, onToggleSeat }: SeatMapProps) {
   // Group seats by section then row
-  const sections = Array.from(new Set(seats.map((s) => s.section)));
+  // Display order: Back to Front (Royal -> Prime Plus -> Prime -> Classic)
+  const sections = ["Royal", "Prime Plus", "Prime", "Classic"];
   const sectionLabels: Record<string, string> = {
-    'Royal': 'Royal Section - Rows A-B',
-    'Prime Plus': 'Prime Plus Section - Rows C-E',
-    'Prime': 'Prime Section - Rows F-H',
-    'Classic': 'Classic Section - Rows I-L'
+    'Royal': 'Royal Section (Back) - 3 Rows',
+    'Prime Plus': 'Prime Plus Section - 6 Rows',
+    'Prime': 'Prime Section - 8 Rows',
+    'Classic': 'Classic Section (Front) - 10 Rows'
   };
   
   const sectionColors: Record<string, string> = {
