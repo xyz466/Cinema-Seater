@@ -11,7 +11,7 @@ interface SeatMapProps {
 
 export function SeatMap({ seats, selectedSeatIds, onToggleSeat }: SeatMapProps) {
   // Group seats by section then row
-  const sections = ["Royal", "Prime Plus", "Prime", "Classic"];
+  const sections = Array.from(new Set(seats.map((s) => s.section)));
   const sectionLabels: Record<string, string> = {
     'Royal': 'Royal Section - Rows A-B',
     'Prime Plus': 'Prime Plus Section - Rows C-E',
@@ -39,7 +39,6 @@ export function SeatMap({ seats, selectedSeatIds, onToggleSeat }: SeatMapProps) 
       <div className="flex flex-col gap-8 items-center">
         {sections.map((section) => {
           const sectionSeats = seats.filter((s) => s.section === section);
-          const rows = [...new Set(sectionSeats.map((s) => s.row))].sort();
 
           return (
             <div key={section} className={`w-full border border-white/10 rounded-lg p-6 bg-gradient-to-b ${sectionColors[section]}`}>
@@ -48,7 +47,7 @@ export function SeatMap({ seats, selectedSeatIds, onToggleSeat }: SeatMapProps) 
               
               {/* Rows in Section */}
               <div className="flex flex-col gap-3 md:gap-4 items-center">
-                {rows.map((row) => {
+                {Array.from(new Set(sectionSeats.map((s) => s.row))).sort().map((row) => {
                   const rowSeats = sectionSeats.filter((s) => s.row === row).sort((a, b) => a.number - b.number);
 
                   return (
@@ -58,7 +57,7 @@ export function SeatMap({ seats, selectedSeatIds, onToggleSeat }: SeatMapProps) 
                       <div className="flex gap-2 md:gap-3">
                         {rowSeats.map((seat) => {
                           const isSelected = selectedSeatIds.includes(seat.id);
-                          const isBooked = seat.isBooked;
+                          const isBooked = !!seat.isBooked;
 
                           return (
                             <motion.button
