@@ -11,17 +11,19 @@ interface SeatMapProps {
 
 export function SeatMap({ seats, selectedSeatIds, onToggleSeat }: SeatMapProps) {
   // Group seats by section then row
-  const sections = [...new Set(seats.map((s) => s.section))];
+  const sections = ["Royal", "Prime Plus", "Prime", "Classic"];
   const sectionLabels: Record<string, string> = {
-    'lower': 'Lower Section (Front) - 38 Seats',
-    'middle': 'Middle Section - 92 Seats',
-    'balcony': 'Balcony Section (Back) - 150 Seats'
+    'Royal': 'Royal Section - Rows A-B',
+    'Prime Plus': 'Prime Plus Section - Rows C-E',
+    'Prime': 'Prime Section - Rows F-H',
+    'Classic': 'Classic Section - Rows I-L'
   };
   
   const sectionColors: Record<string, string> = {
-    'lower': 'from-blue-500/20 to-blue-500/5',
-    'middle': 'from-purple-500/20 to-purple-500/5',
-    'balcony': 'from-orange-500/20 to-orange-500/5'
+    'Royal': 'from-amber-500/20 to-amber-500/5',
+    'Prime Plus': 'from-blue-500/20 to-blue-500/5',
+    'Prime': 'from-purple-500/20 to-purple-500/5',
+    'Classic': 'from-gray-500/20 to-gray-500/5'
   };
 
   return (

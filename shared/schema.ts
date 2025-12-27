@@ -4,7 +4,7 @@ import { z } from "zod";
 
 export const seats = pgTable("seats", {
   id: serial("id").primaryKey(),
-  section: text("section").notNull(), // "lower", "middle", "balcony"
+  section: text("section").notNull(), // "Royal", "Prime Plus", "Prime", "Classic"
   row: text("row").notNull(),
   number: integer("number").notNull(),
   isBooked: boolean("is_booked").default(false),

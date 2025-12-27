@@ -16,6 +16,25 @@ export async function registerRoutes(
     res.json(allSeats);
   });
 
+  app.get("/api/seats/find", async (req, res) => {
+    const section = req.query.section as string;
+    const count = parseInt(req.query.count as string);
+
+    if (!section || isNaN(count)) {
+      return res.status(400).json({ message: "Invalid section or count" });
+    }
+
+    try {
+      const bestSeats = await storage.findSeats(section, count);
+      if (!bestSeats) {
+        return res.status(404).json({ message: "No continuous block available in selected tier" });
+      }
+      res.json(bestSeats);
+    } catch (e: any) {
+      res.status(500).json({ message: e.message });
+    }
+  });
+
   app.post(api.seats.book.path, async (req, res) => {
     try {
       const input = api.seats.book.input.parse(req.body);

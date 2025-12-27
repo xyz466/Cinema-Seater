@@ -1,0 +1,159 @@
+import json
+import os
+
+class CinemaSystem:
+    def __init__(self, filename="theater_state.json"):
+        self.filename = filename
+        self.rows = 12
+        self.cols = 10
+
+        # Row ranges for each tier
+        self.tier_map = {
+            "Royal": (0, 1),
+            "Prime Plus": (2, 4),
+            "Prime": (5, 7),
+            "Classic": (8, 11)
+        }
+
+        self.load_state()
+
+    # ----------------------------------------------------
+    # Load / Initialize Theater State (JSON Persistence)
+    # ----------------------------------------------------
+    def load_state(self):
+        """Load the theater map from a file or create a new one."""
+        if os.path.exists(self.filename):
+            with open(self.filename, 'r') as f:
+                self.theater = json.load(f)
+        else:
+            # 0 = Available, 1 = Occupied
+            for _ in range(self.rows):
+                for _ in range(self.cols):
+                    self.theater = 0
+            self.theater = [[0 for _ in range(self.cols)] for _ in range(self.rows)]
+
+    def save_state(self):
+        """Save current theater map to JSON file."""
+        with open(self.filename, 'w') as f:
+            json.dump(self.theater, f)
+
+    # ----------------------------------------------------
+    # Find Continuous Seat Clusters in a Tier
+    # ----------------------------------------------------
+    def find_clusters(self, tier):
+        start_row, end_row = self.tier_map[tier]
+        clusters = []
+
+        for r in range(start_row, end_row + 1):
+            row = self.theater[r]
+            start = None
+            length = 0
+
+            for c in range(self.cols):
+                if row[c] == 0:
+                    if start is None:
+                        start = c
+                    length += 1
+                else:
+                    if length > 0:
+                        clusters.append((length, r, start))
+                    start = None
+                    length = 0
+
+            if length > 0:
+                clusters.append((length, r, start))
+
+        return clusters
+
+    # ----------------------------------------------------
+    # Greedy + Binary Search Seat Allocation
+    # ----------------------------------------------------
+    def find_seats_greedy_binary(self, tier, count):
+        if tier not in self.tier_map:
+            return None
+
+        clusters = self.find_clusters(tier)
+
+        # Keep only clusters large enough
+        valid_clusters = [c for c in clusters if c[0] >= count]
+        if not valid_clusters:
+            return None
+
+          # Greedy: smallest cluster first
+        valid_clusters.sort(key=lambda x: x[0])
+        sizes = [c[0] for c in valid_clusters]
+
+        idx = self.binary_search_lower_bound(sizes, count)
+        if idx == -1:
+            return None
+
+        size, row, start_col = valid_clusters[idx]
+        return [(row, start_col + i) for i in range(count)]
+
+
+    def binary_search_lower_bound(self, arr, key):
+        low = 0
+        high = len(arr) - 1
+        ans = -1
+
+        while low <= high:
+            mid = (low + high) // 2
+
+            if arr[mid] >= key:
+                ans = mid
+                high = mid - 1
+            else:
+                low = mid + 1
+
+        return ans
+
+    # ----------------------------------------------------
+    # Book Seats (Update JSON)
+    # ----------------------------------------------------
+    def book_seats(self, seats):
+        for r, c in seats:
+            self.theater[r][c] = 1
+        self.save_state()
+
+    # ----------------------------------------------------
+    # Display Seat Map
+    # ----------------------------------------------------
+    def display_map(self):
+        print("\n------ CINEMA SEAT MAP ------")
+        print("0 = Available | 1 = Booked\n")
+        for i, row in enumerate(self.theater):
+            tier = next(k for k, v in self.tier_map.items() if v[0] <= i <= v[1])
+            print(f"Row {i:2} [{tier:10}]: {' '.join(map(str, row))}")
+        print("-----------------------------\n")
+
+
+# --------------------------------------------------------
+# MAIN FUNCTION
+# --------------------------------------------------------
+if __name__ == "__main__":
+    cinema = CinemaSystem()
+    cinema.display_map()
+
+    print("🎬 Welcome to Cinema Seat Reservation")
+    tier = input("Select Tier (Royal / Prime Plus / Prime / Classic): ").strip()
+
+    try:
+        count = int(input("Number of seats required: "))
+    except ValueError:
+        print("Invalid seat count")
+        exit()
+
+    seats = cinema.find_seats_greedy_binary(tier, count)
+
+    if seats:
+        print(f"\nBest seats found: {seats}")
+        confirm = input("Confirm booking? (yes/no): ").lower()
+
+        if confirm == "yes":
+            cinema.book_seats(seats)
+            print("Booking successful!")
+            cinema.display_map()
+        else:
+            print("Booking cancelled")
+    else:
+        print("No continuous block available in selected tier")

@@ -4,16 +4,26 @@ import { SeatMap } from "@/components/SeatMap";
 import { BookingSummary } from "@/components/BookingSummary";
 import { BookingDialog } from "@/components/BookingDialog";
 import { Legend } from "@/components/Legend";
-import { Clapperboard, RotateCcw, Loader2 } from "lucide-react";
+import { Clapperboard, RotateCcw, Loader2, Search } from "lucide-react";
 import { motion } from "framer-motion";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Home() {
   const { data: seats = [], isLoading, error } = useSeats();
   const bookMutation = useBookSeats();
   const resetMutation = useResetSeats();
+  const { toast } = useToast();
   
   const [selectedSeatIds, setSelectedSeatIds] = useState<number[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [tier, setTier] = useState<string>("Royal");
+  const [count, setCount] = useState<number>(2);
+  const [isFinding, setIsFinding] = useState(false);
 
   const selectedSeats = seats.filter(s => selectedSeatIds.includes(s.id));
 
@@ -23,6 +33,31 @@ export default function Home() {
         ? prev.filter(id => id !== seatId)
         : [...prev, seatId]
     );
+  };
+
+  const handleFindSeats = async () => {
+    setIsFinding(true);
+    try {
+      const res = await fetch(`/api/seats/find?section=${tier}&count=${count}`);
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "No seats found");
+      }
+      const foundSeats = await res.json();
+      setSelectedSeatIds(foundSeats.map((s: any) => s.id));
+      toast({
+        title: "Seats Found!",
+        description: `Selected ${foundSeats.length} seats in ${tier} tier.`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "No seats found",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsFinding(false);
+    }
   };
 
   const handleBookConfirm = async (name: string) => {
@@ -92,32 +127,82 @@ export default function Home() {
       </header>
 
       <main className="py-12 px-4 pb-40">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12 space-y-2">
-            <motion.h2 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-3xl md:text-5xl font-display font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-white/60"
-            >
-              Interstellar
-            </motion.h2>
-            <motion.p 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.2 }}
-              className="text-muted-foreground text-sm md:text-base"
-            >
-              Today • 8:00 PM • Hall 4 • IMAX Laser
-            </motion.p>
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
+          <div className="lg:col-span-8">
+            <div className="text-center mb-12 space-y-2">
+              <motion.h2 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-3xl md:text-5xl font-display font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-white/60"
+              >
+                Interstellar
+              </motion.h2>
+              <motion.p 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2 }}
+                className="text-muted-foreground text-sm md:text-base"
+              >
+                Today • 8:00 PM • Hall 4 • IMAX Laser
+              </motion.p>
+            </div>
+
+            <SeatMap 
+              seats={seats} 
+              selectedSeatIds={selectedSeatIds} 
+              onToggleSeat={handleToggleSeat} 
+            />
+
+            <Legend />
           </div>
 
-          <SeatMap 
-            seats={seats} 
-            selectedSeatIds={selectedSeatIds} 
-            onToggleSeat={handleToggleSeat} 
-          />
-
-          <Legend />
+          <div className="lg:col-span-4 space-y-6">
+            <Card className="border-white/10 bg-card/30 backdrop-blur">
+              <CardHeader>
+                <CardTitle className="text-lg font-medium flex items-center gap-2">
+                  <Search className="w-5 h-5 text-primary" />
+                  Smart Seat Finder
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Preferred Tier</Label>
+                  <Select value={tier} onValueChange={setTier}>
+                    <SelectTrigger className="bg-background/50 border-white/5">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Royal">Royal (Front)</SelectItem>
+                      <SelectItem value="Prime Plus">Prime Plus</SelectItem>
+                      <SelectItem value="Prime">Prime</SelectItem>
+                      <SelectItem value="Classic">Classic (Back)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Number of Seats</Label>
+                  <div className="flex items-center gap-3">
+                    <Input 
+                      type="number" 
+                      min={1} 
+                      max={10} 
+                      value={count} 
+                      onChange={(e) => setCount(parseInt(e.target.value) || 1)}
+                      className="bg-background/50 border-white/5"
+                    />
+                    <Button 
+                      className="flex-1" 
+                      onClick={handleFindSeats}
+                      disabled={isFinding}
+                    >
+                      {isFinding ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                      Find Best
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </main>
 

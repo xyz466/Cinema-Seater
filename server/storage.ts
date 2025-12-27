@@ -46,41 +46,81 @@ export class DatabaseStorage implements IStorage {
     const existing = await db.select().from(seats).limit(1);
     if (existing.length === 0) {
       const allSeats: InsertSeat[] = [];
+      const tierMap = {
+        "Royal": [0, 1],
+        "Prime Plus": [2, 4],
+        "Prime": [5, 7],
+        "Classic": [8, 11]
+      };
+      const rows = 12;
+      const cols = 10;
 
-      // Lower Section: 38 seats (4 rows of 8 + 1 row of 6)
-      const lowerRows = ['A', 'B', 'C', 'D'];
-      for (const row of lowerRows) {
-        for (let i = 1; i <= 8; i++) {
-          allSeats.push({ section: 'lower', row, number: i, isBooked: false, bookedBy: null });
+      for (let r = 0; r < rows; r++) {
+        const rowLabel = String.fromCharCode(65 + r);
+        let section = "Classic";
+        for (const [tier, range] of Object.entries(tierMap)) {
+          if (r >= range[0] && r <= range[1]) {
+            section = tier;
+            break;
+          }
         }
-      }
-      // Last row of lower with 6 seats
-      for (let i = 1; i <= 6; i++) {
-        allSeats.push({ section: 'lower', row: 'E', number: i, isBooked: false, bookedBy: null });
-      }
 
-      // Middle Section: 92 seats (10 rows of 9 + 1 row of 2)
-      const middleRows = ['F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O'];
-      for (const row of middleRows) {
-        for (let i = 1; i <= 9; i++) {
-          allSeats.push({ section: 'middle', row, number: i, isBooked: false, bookedBy: null });
-        }
-      }
-      // Last row of middle with 2 seats
-      for (let i = 1; i <= 2; i++) {
-        allSeats.push({ section: 'middle', row: 'P', number: i, isBooked: false, bookedBy: null });
-      }
-
-      // Balcony Section: 150 seats (15 rows of 10)
-      const balconyRows = ['Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'AA', 'AB', 'AC', 'AD', 'AE'];
-      for (const row of balconyRows) {
-        for (let i = 1; i <= 10; i++) {
-          allSeats.push({ section: 'balcony', row, number: i, isBooked: false, bookedBy: null });
+        for (let c = 1; c <= cols; c++) {
+          allSeats.push({
+            section,
+            row: rowLabel,
+            number: c,
+            isBooked: false,
+            bookedBy: null
+          });
         }
       }
       
       await db.insert(seats).values(allSeats);
     }
+  }
+
+  async findSeats(section: string, count: number): Promise<Seat[] | null> {
+    const allSeats = await this.getSeats();
+    const sectionSeats = allSeats.filter(s => s.section === section);
+    
+    // Group by row
+    const rows: Record<string, Seat[]> = {};
+    sectionSeats.forEach(s => {
+      if (!rows[s.row]) rows[s.row] = [];
+      rows[s.row].push(s);
+    });
+
+    const clusters: { length: number, seats: Seat[] }[] = [];
+
+    for (const rowLabel in rows) {
+      const row = rows[rowLabel].sort((a, b) => a.number - b.number);
+      let currentCluster: Seat[] = [];
+
+      for (const seat of row) {
+        if (!seat.isBooked) {
+          currentCluster.push(seat);
+        } else {
+          if (currentCluster.length > 0) {
+            clusters.push({ length: currentCluster.length, seats: [...currentCluster] });
+          }
+          currentCluster = [];
+        }
+      }
+      if (currentCluster.length > 0) {
+        clusters.push({ length: currentCluster.length, seats: currentCluster });
+      }
+    }
+
+    // Greedy: smallest cluster that fits the count
+    const validClusters = clusters
+      .filter(c => c.length >= count)
+      .sort((a, b) => a.length - b.length);
+
+    if (validClusters.length === 0) return null;
+
+    // Return the first 'count' seats from the best cluster
+    return validClusters[0].seats.slice(0, count);
   }
 }
 
