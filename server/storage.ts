@@ -47,10 +47,10 @@ export class DatabaseStorage implements IStorage {
     if (existing.length === 0) {
       const allSeats: InsertSeat[] = [];
       const sections = [
-        { name: "Royal", rows: 3, cols: 8 },
-        { name: "Prime Plus", rows: 6, cols: 10 },
-        { name: "Prime", rows: 8, cols: 12 },
-        { name: "Classic", rows: 10, cols: 15 }
+        { name: "Royal", rows: 1, cols: 14 },
+        { name: "Prime Plus", rows: 4, cols: 16 },
+        { name: "Prime", rows: 3, cols: 16 },
+        { name: "Classic", rows: 2, cols: 16 }
       ];
 
       // Sections are ordered Back to Front in the UI, 

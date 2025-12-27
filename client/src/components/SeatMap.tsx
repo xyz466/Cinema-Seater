@@ -15,10 +15,10 @@ export function SeatMap({ seats, selectedSeatIds, onToggleSeat }: SeatMapProps) 
   // because screen is moved to bottom
   const sections = ["Classic", "Prime", "Prime Plus", "Royal"];
   const sectionLabels: Record<string, string> = {
-    'Classic': 'Classic Section (Front) - 10 Rows',
-    'Prime': 'Prime Section - 8 Rows',
-    'Prime Plus': 'Prime Plus Section - 6 Rows',
-    'Royal': 'Royal Section (Back) - 3 Rows'
+    'Classic': 'Classic Section (Front) - 2 Rows',
+    'Prime': 'Prime Section - 3 Rows',
+    'Prime Plus': 'Prime Plus Section - 4 Rows',
+    'Royal': 'Royal Section (Back) - 1 Row'
   };
   
   const sectionColors: Record<string, string> = {
