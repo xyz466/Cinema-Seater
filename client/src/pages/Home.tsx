@@ -152,17 +152,16 @@ export default function Home() {
               selectedSeatIds={selectedSeatIds} 
               onToggleSeat={handleToggleSeat} 
             />
-
-            <Legend />
           </div>
 
           <div className="lg:col-span-4 space-y-6">
             <Card className="border-white/10 bg-card/30 backdrop-blur">
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between gap-4">
                 <CardTitle className="text-lg font-medium flex items-center gap-2">
                   <Search className="w-5 h-5 text-primary" />
-                  Smart Seat Finder
+                  Status
                 </CardTitle>
+                <Legend />
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
@@ -172,10 +171,10 @@ export default function Home() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Royal">Royal (Front)</SelectItem>
+                      <SelectItem value="Royal">Royal (Back)</SelectItem>
                       <SelectItem value="Prime Plus">Prime Plus</SelectItem>
                       <SelectItem value="Prime">Prime</SelectItem>
-                      <SelectItem value="Classic">Classic (Back)</SelectItem>
+                      <SelectItem value="Classic">Classic (Front)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

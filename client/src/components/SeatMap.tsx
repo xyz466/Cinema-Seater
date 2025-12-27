@@ -11,13 +11,14 @@ interface SeatMapProps {
 
 export function SeatMap({ seats, selectedSeatIds, onToggleSeat }: SeatMapProps) {
   // Group seats by section then row
-  // Display order: Back to Front (Royal -> Prime Plus -> Prime -> Classic)
-  const sections = ["Royal", "Prime Plus", "Prime", "Classic"];
+  // Display order: Front to Back (Classic -> Prime -> Prime Plus -> Royal)
+  // because screen is moved to bottom
+  const sections = ["Classic", "Prime", "Prime Plus", "Royal"];
   const sectionLabels: Record<string, string> = {
-    'Royal': 'Royal Section (Back) - 3 Rows',
-    'Prime Plus': 'Prime Plus Section - 6 Rows',
+    'Classic': 'Classic Section (Front) - 10 Rows',
     'Prime': 'Prime Section - 8 Rows',
-    'Classic': 'Classic Section (Front) - 10 Rows'
+    'Prime Plus': 'Prime Plus Section - 6 Rows',
+    'Royal': 'Royal Section (Back) - 3 Rows'
   };
   
   const sectionColors: Record<string, string> = {
@@ -29,15 +30,8 @@ export function SeatMap({ seats, selectedSeatIds, onToggleSeat }: SeatMapProps) 
 
   return (
     <div className="w-full max-w-6xl mx-auto p-4 md:p-8 perspective-1000">
-      {/* Screen */}
-      <div className="mb-12 relative">
-        <div className="h-2 w-3/4 mx-auto bg-white/20 rounded-full blur-[2px] screen-glow" />
-        <div className="h-16 w-3/4 mx-auto bg-gradient-to-b from-primary/20 to-transparent transform perspective-3d rotate-x-12 opacity-50 mask-image-gradient" />
-        <p className="text-center text-xs tracking-[0.5em] text-muted-foreground mt-4 font-mono uppercase">Screen</p>
-      </div>
-
       {/* Seats Grid - By Section */}
-      <div className="flex flex-col gap-8 items-center">
+      <div className="flex flex-col gap-8 items-center mb-12">
         {sections.map((section) => {
           const sectionSeats = seats.filter((s) => s.section === section);
 
@@ -107,6 +101,13 @@ export function SeatMap({ seats, selectedSeatIds, onToggleSeat }: SeatMapProps) 
             </div>
           );
         })}
+      </div>
+
+      {/* Screen at Bottom */}
+      <div className="mt-12 relative">
+        <p className="text-center text-xs tracking-[0.5em] text-muted-foreground mb-4 font-mono uppercase">Screen</p>
+        <div className="h-16 w-3/4 mx-auto bg-gradient-to-t from-primary/20 to-transparent transform perspective-3d -rotate-x-12 opacity-50 mask-image-gradient-reverse" />
+        <div className="h-2 w-3/4 mx-auto bg-white/20 rounded-full blur-[2px] screen-glow" />
       </div>
     </div>
   );
